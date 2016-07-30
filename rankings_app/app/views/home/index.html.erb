@@ -1,0 +1,88 @@
+<% provide(:title, "Results") %>
+
+<style>
+	table th {
+		background-color: #3399cc;
+	}
+	table tr{
+		background-color: #99cccc;
+	}
+</style>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/u/bs-3.3.6/jq-2.2.3,dt-1.10.12,b-1.2.1,b-flash-1.2.1/datatables.min.css"/>
+
+<div id="page-wrapper">
+<div class="row">
+	<h1 class="page-header">Results</h1>
+<div class="panel panel-default">
+	<div class="panel-heading">
+   <b>Source:</b> <%=  %>
+   <span style="float:right"><b>Date crawled:</b> </span>
+	</div>
+
+	
+	<div class="panel-body">
+	
+	  <div class="table-responsive">
+	<table id="results-table" class="table table-bordered table-hover">
+				<thead>
+	  			  <th>University Name</th>
+	  			  <th>Rank</th>
+				  <th>Tuition Fees</th>
+				  <th>Total Enrollment</th>
+				  <th>Acceptance Rate</th>
+				  <th>Average Retention Rate</th>
+				  <th>Graduation rate</th>
+				</thead>
+				<tbody>
+					<% for data in @data_hash %>
+				  <tr>
+				  	<td><%= data['name'] %></td>
+				  	<td><%= data['rank'] %></td>
+				  	<td><%= data['tuition_fees'] %></td>
+				  	<td><%=data['total_enrollment'] %></td>
+				  	<td><%=data['acceptance_rate'] %></td>
+				  	<td><%=data['average_retention_rates'] %></td>
+				  	<td><%=data['graduation_rate'] %></td>
+				  </tr>
+				  <% end %>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+</div>
+</div>
+
+<script>
+// Refernce http://jsfiddle.net/8kez8mvy/
+$(document).ready(function() {
+	jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+	"my-currency-pre": function(a) {
+     //alert(a.replace(/[^0-9]/gi, ''));
+        return parseFloat(a.replace(/[^0-9]/gi, ''));
+	},
+	"my-currency-asc": function(a,b) {
+		return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+	},
+	"my-currency-desc": function(a,b) {
+		return ((a < b) ? 1 : ((a > b) ? -1 : 0));
+	}
+});
+
+  var table = $('#results-table').DataTable({
+  	"dom": 'Bfrtip',
+  	"buttons": ['excel', 'pdf', 'csv'],
+  	"aoColumnDefs": [
+  	{"sType": "my-currency", "aTargets": [2,3,4]}
+  	],
+  	iDisplayLength: 10
+  	
+  });
+ });
+</script>
+ <link href="https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet" />
+<!-- <link href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css" rel="stylesheet" /> -->
+<link href="https://cdn.datatables.net/buttons/1.2.1/css/buttons.dataTables.min.css" rel="stylesheet" />
+ <script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.2.1/js/dataTables.buttons.min.js"></script>
