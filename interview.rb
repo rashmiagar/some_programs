@@ -1,5 +1,6 @@
 require 'json' 
 require 'date'
+require 'active_support/time'
 
 class FreeSlot
   attr_accessor :start_time, :end_time
@@ -93,7 +94,7 @@ while(union_arr.length > 2)
     puts "<<<result<<<<#{result}>>>>>>>>>>>"
 end
 
-union_arr.map!{|elem| {'start': DateTime.strptime(elem['start'].to_s, '%s').to_s, 'end': DateTime.strptime(elem['end'].to_s, '%s')}}
-result.map!{|elem| {'start': DateTime.strptime(elem['start'].to_s, '%s').to_s, 'end': DateTime.strptime(elem['end'].to_s, '%s')}}
+union_arr.map!{|elem| {'start': DateTime.strptime(elem['start'].to_s, '%s').change(offset: '+8'), 'end': DateTime.strptime(elem['end'].to_s, '%s').change(offset: '+8')}}
+result.map!{|elem| {'start': DateTime.strptime(elem['start'].to_s, '%s').change(offset: '+8'), 'end': DateTime.strptime(elem['end'].to_s, '%s').change(offset: '+8')}}
 
 puts "<<<<<<#{union_arr + result}>>>>>>>>"
