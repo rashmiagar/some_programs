@@ -1,18 +1,60 @@
 require 'json' 
 require 'date'
 require 'active_support/time'
-
-class FreeSlot
-  attr_accessor :start_time, :end_time
-  
-  def initialize(start_time, end_time)
-    self.start_time = (DateTime.parse start_time).strftime('%s')
-    self.end_time = (DateTime.parse end_time).strftime('%s')
-  end
-end
+require 'byebug'
 
 class Calendar
+  # array of hashes [ {start: xx, end: xx}, {start: xx, end: xx}]
+
+  attr_accessor :free_slots
   
+  # input is array of json 
+
+  def initialize(free_slot_input)
+    @free_slots = JSON.parse(free_slot_input.to_json)
+
+    # convert String datetime to an integer format for easy comparisons
+    for elem in @free_slots 
+      elem['start'] = (DateTime.parse elem['start']).strftime('%s').to_i
+      elem['end'] = (DateTime.parse elem['end']).strftime('%s').to_i
+    end
+  end
+
+  def merge(cal2)
+    self.free_slots += cal2.free_slots
+    self.free_slots.sort_by!{|elem| elem['end'] - elem['start']}
+    self 
+  end
+
+  def length
+    self.free_slots.length
+  end
+
+  def remove_overlapping_slots
+    byebug
+    result = Array.new
+    union_arr = self.free_slots
+
+    while(union_arr.length > 2)
+      result << union_arr.last
+      union_arr.pop
+
+      union_copy = union_arr.clone
+  
+      union_arr.each{|slot|
+        if slot['end']-slot['start'] == 3600 && slot['start']>=result.last['start'] && slot['end']<= result.last['end']
+          union_copy.delete slot
+        end
+      }
+      union_arr = union_copy.clone
+    end # end of while
+
+    result += union_copy
+    result.sort_by!{|elem| elem['start']}
+    result.map!{|elem| {'start': DateTime.strptime(elem['start'].to_s, '%s')+Rational(8,24), 'end': DateTime.strptime(elem['end'].to_s, '%s')+Rational(8,24)}}
+
+    return result
+  end # end of remove_overlapping_slots 
 end
 
 
@@ -50,51 +92,7 @@ ical_json = [
     }
 ]
 
-gcal = JSON.parse gcal_json.to_json
-# gcal.map{|i| i.strftime('%s')}
-# gcal << FreeSlot.new("2015-11-01T10:00:00.00+08:00", "2015-11-01T11:00:00.00+08:00")
-for elem in gcal 
-  elem['start'] = (DateTime.parse elem['start']).strftime('%s').to_i
-  elem['end'] = (DateTime.parse elem['end']).strftime('%s').to_i
-end
-
-
-ical = JSON.parse ical_json.to_json
-puts "<<<<<<<<#{ical}>>>>>>>"
-
-for elem in ical 
-  elem['start'] = (DateTime.parse elem['start']).strftime('%s').to_i
-  elem['end'] = (DateTime.parse elem['end']).strftime('%s').to_i
-end
-puts ical
-# gcal = [[12, 13], [13, 14], [14, 15], [15, 16]]
-# ical = [[10, 11], [11, 12, 13, 14], [15, 16, 17]]
-
-union_arr = (gcal + ical).sort_by!{|elem| elem['end'] - elem['start']}
-
-puts "*********#{union_arr}*********"
-
-result = Array.new
-
-while(union_arr.length > 2)
-  result << union_arr.last
-  union_arr.pop
-  # puts "<<<<<<<< #{union_arr}>>>>>>>>>>"
-  
-  indexes = []
-  union_arr.each_with_index{|slot, i|
-	  if slot['end']-slot['start'] == 3600 && slot['start']>=result.last['start'] && slot['end']<= result.last['end']
-	    indexes << i
-      # puts i
-    end
-  }
-  puts indexes
-  indexes.each{|i| union_arr.delete_at i}
-    puts "<<<<<union<<#{union_arr}>>>>>>>>>"
-    puts "<<<result<<<<#{result}>>>>>>>>>>>"
-end
-
-union_arr.map!{|elem| {'start': DateTime.strptime(elem['start'].to_s, '%s').change(offset: '+8'), 'end': DateTime.strptime(elem['end'].to_s, '%s').change(offset: '+8')}}
-result.map!{|elem| {'start': DateTime.strptime(elem['start'].to_s, '%s').change(offset: '+8'), 'end': DateTime.strptime(elem['end'].to_s, '%s').change(offset: '+8')}}
-
-puts "<<<<<<#{union_arr + result}>>>>>>>>"
+gcal = Calendar.new gcal_json
+ical = Calendar.new ical_json
+union_calendar = gcal.merge ical
+puts union_calendar.remove_overlapping_slots
