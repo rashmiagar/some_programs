@@ -31,7 +31,7 @@ class Calendar
   end
 
   def remove_overlapping_slots
-    byebug
+    
     result = Array.new
     union_arr = self.free_slots
 
